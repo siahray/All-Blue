@@ -93,3 +93,39 @@ export async function categorizeIngredient(ingredientName: string): Promise<Cate
 
   return { category: 'Other', image_url: null };
 }
+
+export async function analyzeRecipeStats(title: string, instructions: string) {
+  const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+  
+  for (const modelName of modelNames) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const prompt = `Analyze this recipe and provide a JSON estimate for:
+      - time (e.g. "45 min", "2 hours")
+      - difficulty ("Easy", "Medium", "Hard")
+      - servings (number string like "4")
+      - rating (decimal string like "4.8")
+      
+      Recipe: ${title}
+      Instructions: ${instructions.substring(0, 1000)}
+      
+      Return ONLY JSON like: {"time": "...", "difficulty": "...", "servings": "...", "rating": "..."}`;
+      
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+      const jsonStr = text.match(/\{.*\}/s)?.[0] || '{"time": "45 min", "difficulty": "Medium", "servings": "4", "rating": "4.5"}';
+      const stats = JSON.parse(jsonStr);
+      return {
+        time: stats.time || "45 min",
+        difficulty: stats.difficulty || "Medium",
+        servings: stats.servings || "4",
+        rating: Number(stats.rating) || 4.5
+      };
+    } catch (error) {
+      console.warn(`AI Model ${modelName} failed, trying next...`);
+      continue;
+    }
+  }
+
+  return { time: "45 min", difficulty: "Medium", servings: "4", rating: 4.5 };
+}

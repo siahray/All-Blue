@@ -18,6 +18,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Colors } from '../../theme/colors';
 import { supabase, InventoryItem } from '../../services/supabase';
+import { BackToTop } from '../../components/common/BackToTop';
 import { 
   Plus, 
   X, 
@@ -72,6 +73,8 @@ export default function PantryScreen() {
   const router = useRouter();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const listRef = useRef<FlatList>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   
   // AI Status
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -237,10 +240,25 @@ export default function PantryScreen() {
         <View style={styles.center}><ActivityIndicator color={Colors.black} size="large" /></View>
       ) : (
         <FlatList
-          data={filteredItems} renderItem={({ item }) => <PantryItemCard item={item} onPress={() => { setSelectedItem(item); setDetailModalVisible(true); }} />} numColumns={2} keyExtractor={item => item.id} contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}
+          ref={listRef}
+          data={filteredItems} 
+          renderItem={({ item }) => <PantryItemCard item={item} onPress={() => { setSelectedItem(item); setDetailModalVisible(true); }} />} 
+          numColumns={2} 
+          keyExtractor={item => item.id} 
+          contentContainerStyle={styles.list} 
+          showsVerticalScrollIndicator={false}
+          onScroll={(e) => {
+            const offset = e.nativeEvent.contentOffset.y;
+            setShowBackToTop(offset > 600);
+          }}
           ListEmptyComponent={<View style={styles.emptyContainer}><Package size={64} color="#DDD" strokeWidth={1.5} /><Text style={styles.emptyText}>No items found</Text></View>}
         />
       )}
+
+      <BackToTop 
+        visible={showBackToTop} 
+        onPress={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })} 
+      />
 
       <Modal visible={addModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -277,7 +295,7 @@ export default function PantryScreen() {
               <TouchableOpacity style={styles.closeCircle} onPress={() => setDetailModalVisible(false)}><X color="white" size={20} /></TouchableOpacity>
             </View>
             <View style={styles.detailBody}>
-              <View style={styles.detailHeaderRow}><View><Text style={styles.detailCategory}>{selectedItem?.category.toUpperCase()}</Text><Text style={styles.detailName}>{selectedItem?.name}</Text></View><View style={styles.detailQtyBadge}><Text style={styles.detailQtyText}>{selectedItem?.quantity}</Text></View></View>
+              <View style={styles.detailHeaderRow}><View><Text style={styles.detailCategory}>{selectedItem?.category?.toUpperCase()}</Text><Text style={styles.detailName}>{selectedItem?.name}</Text></View><View style={styles.detailQtyBadge}><Text style={styles.detailQtyText}>{selectedItem?.quantity}</Text></View></View>
               <TouchableOpacity style={styles.primaryCookBtn} onPress={() => { setDetailModalVisible(false); router.push({ pathname: "/", params: { filter: selectedItem?.name } }); }}><Flame color="white" size={20} style={{ marginRight: 8 }} /><Text style={styles.primaryCookBtnText}>Cook with this</Text></TouchableOpacity>
               <View style={styles.detailActions}>
                 <TouchableOpacity style={styles.actionBtn}><Edit3 color={Colors.black} size={20} /><Text style={styles.actionBtnText}>Edit</Text></TouchableOpacity>

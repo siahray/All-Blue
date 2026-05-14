@@ -14,6 +14,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../../theme/colors';
 import { Recipe, isWebRecipe } from '../../../data/recipes';
 import { ArrowLeft, Clock, Star, Users, ChefHat, Globe } from 'lucide-react-native';
+import { analyzeRecipeStats } from '../../../services/gemini';
 import { supabase } from '../../../services/supabase';
 
 const { width } = Dimensions.get('window');
@@ -34,7 +35,11 @@ export default function RecipeDetailScreen() {
 
     if (isWebRecipe(id)) {
       try {
-        const mealId = id.replace('web-', '');
+        // Extract only the numeric meal ID (e.g. from "web-12345-0" take "12345")
+        const parts = id.split('-');
+        const mealId = parts[1]; 
+        
+        if (!mealId) return;
         const response = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${mealId}`);
         const data = await response.json();
         
@@ -49,19 +54,21 @@ export default function RecipeDetailScreen() {
             }
           }
 
+          const aiStats = await analyzeRecipeStats(meal.strMeal, meal.strInstructions);
+
           setRecipe({
             id: id,
-            title: meal.strMeal.toUpperCase(),
-            subtitle: `A classic ${meal.strArea} dish`,
+            title: meal.strMeal?.toUpperCase() || 'UNKNOWN MEAL',
+            subtitle: `${meal.strCategory} • ${meal.strArea} Cuisine`,
             description: meal.strInstructions,
             image: meal.strMealThumb,
-            time: '45 min',
-            difficulty: 'Medium',
-            rating: 4.5,
-            servings: '4',
+            time: aiStats.time,
+            difficulty: aiStats.difficulty,
+            rating: aiStats.rating,
+            servings: aiStats.servings,
             category: 'web',
             ingredients: ingredients,
-            steps: meal.strInstructions.split('\r\n').filter((s: string) => s.trim().length > 10)
+            steps: (meal.strInstructions || '').split(/\r?\n/).filter((s: string) => s.trim().length > 5)
           });
         }
       } catch (error) { console.error(error); }

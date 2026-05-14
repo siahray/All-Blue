@@ -1,9 +1,14 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { Colors } from '../../theme/colors';
+import { supabase } from '../../services/supabase';
 import { Settings, LogOut, ChevronRight, Award, BookOpen } from 'lucide-react-native';
 
 export default function ProfileScreen() {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -60,7 +65,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton}>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <LogOut size={20} color="#FF5252" />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
