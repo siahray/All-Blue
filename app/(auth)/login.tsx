@@ -29,8 +29,8 @@ export default function LoginScreen() {
     try {
       setLoading(provider);
 
-      // Simple, reliable redirect URL
-      const redirectUrl = Linking.createURL('(tabs)');
+      // Hardcode the deep link so Expo Dev Tools don't inject "exp+" into it
+      const redirectUrl = 'allblue://auth';
       
       console.log('--- LOGIN ATTEMPT ---');
       console.log('Provider:', provider);
@@ -47,26 +47,8 @@ export default function LoginScreen() {
       if (error) throw error;
 
       if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-        
-        if (result.type === 'success' && result.url) {
-          // Convert # to ? for easier parsing
-          const urlToParse = result.url.replace('#', result.url.includes('?') ? '&' : '?');
-          const { queryParams } = Linking.parse(urlToParse);
-          
-          const access_token = queryParams?.access_token as string;
-          const refresh_token = queryParams?.refresh_token as string;
-
-          if (access_token && refresh_token) {
-            console.log('Tokens received! Authenticating...');
-            const { error: sessionError } = await supabase.auth.setSession({
-              access_token,
-              refresh_token,
-            });
-            if (sessionError) throw sessionError;
-            console.log('Successfully logged in!');
-          }
-        }
+        // We open the browser and let the root _layout.tsx catch the return trip
+        await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
       }
       
     } catch (error: any) {

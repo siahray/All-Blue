@@ -17,13 +17,13 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.siah0ray.AllBlue",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.siah0ray.AllBlue"
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"

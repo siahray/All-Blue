@@ -1,10 +1,50 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, ActivityIndicator, FlatList } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Colors } from '../../theme/colors';
 import { supabase } from '../../services/supabase';
-import { Settings, LogOut, ChevronRight, Award, BookOpen } from 'lucide-react-native';
+import { Settings, LogOut, ChevronRight, Award, BookOpen, Heart, Clock } from 'lucide-react-native';
 
 export default function ProfileScreen() {
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'cookbook' | 'likes'>('cookbook');
+  const [likedRecipes, setLikedRecipes] = useState<any[]>([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    fetchProfileAndData();
+  }, []);
+
+  const fetchProfileAndData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        if (data) setProfile(data);
+
+        const { data: likesData } = await supabase
+          .from('saved_recipes')
+          .select('*, recipes(*)')
+          .eq('user_id', user.id);
+          
+        if (likesData) {
+          // Flatten out the relation
+          const recipes = likesData.map(item => item.recipes).filter(r => r !== null);
+          setLikedRecipes(recipes);
+        }
+      }
+    } catch (error) {
+      console.log('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -15,13 +55,19 @@ export default function ProfileScreen() {
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
             <Image 
-              source={{ uri: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix' }} 
+              source={{ uri: profile?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix' }} 
               style={styles.avatar} 
             />
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.name}>Chef Felix</Text>
-            <Text style={styles.title}>Master of Spice</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color={Colors.primary} style={{ alignSelf: 'flex-start' }} />
+            ) : (
+              <>
+                <Text style={styles.name}>@{profile?.username || 'chef_master'}</Text>
+                <Text style={styles.title}>{profile?.full_name || 'Master of Spice'}</Text>
+              </>
+            )}
           </View>
           <TouchableOpacity style={styles.settingsButton}>
             <Settings color={Colors.black} size={24} />
@@ -46,29 +92,70 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>General</Text>
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemLeft}>
-            <Award size={20} color={Colors.black} />
-            <Text style={styles.menuItemText}>Achievements</Text>
-          </View>
-          <ChevronRight size={20} color="#CCC" />
+      <View style={styles.tabContainer}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'cookbook' && styles.activeTab]}
+          onPress={() => setActiveTab('cookbook')}
+        >
+          <BookOpen size={20} color={activeTab === 'cookbook' ? Colors.black : Colors.textSecondary} />
+          <Text style={[styles.tabText, activeTab === 'cookbook' && styles.activeTabText]}>Cookbook</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemLeft}>
-            <BookOpen size={20} color={Colors.black} />
-            <Text style={styles.menuItemText}>My Cookbook</Text>
-          </View>
-          <ChevronRight size={20} color="#CCC" />
+        
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'likes' && styles.activeTab]}
+          onPress={() => setActiveTab('likes')}
+        >
+          <Heart size={20} color={activeTab === 'likes' ? Colors.black : Colors.textSecondary} />
+          <Text style={[styles.tabText, activeTab === 'likes' && styles.activeTabText]}>Likes</Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <LogOut size={20} color="#FF5252" />
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
+      <View style={styles.tabContent}>
+        {activeTab === 'cookbook' ? (
+          <View style={styles.section}>
+            <TouchableOpacity style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <Award size={20} color={Colors.black} />
+                <Text style={styles.menuItemText}>Achievements</Text>
+              </View>
+              <ChevronRight size={20} color="#CCC" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <LogOut size={20} color="#FF5252" />
+              <Text style={styles.logoutText}>Log Out</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.section}>
+            {likedRecipes.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Heart size={48} color={Colors.border} />
+                <Text style={styles.emptyStateText}>No liked recipes yet.</Text>
+                <Text style={styles.emptyStateSub}>Tap the heart icon on a recipe to save it here!</Text>
+              </View>
+            ) : (
+              likedRecipes.map((recipe) => (
+                <TouchableOpacity 
+                  key={recipe.id} 
+                  style={styles.recipeCard}
+                  onPress={() => router.push(`/features/recipe/${recipe.id}`)}
+                >
+                  <Image source={{ uri: recipe.image_url }} style={styles.recipeImage} />
+                  <View style={styles.recipeInfo}>
+                    <Text style={styles.recipeTitle}>{recipe.title}</Text>
+                    <View style={styles.recipeMeta}>
+                      <Clock size={14} color={Colors.textSecondary} />
+                      <Text style={styles.recipeTime}>{recipe.cook_time_minutes} mins</Text>
+                    </View>
+                  </View>
+                  <ChevronRight size={20} color="#CCC" />
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -152,15 +239,41 @@ const styles = StyleSheet.create({
     backgroundColor: '#EEE',
     alignSelf: 'center',
   },
-  section: {
-    marginTop: 30,
+  tabContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
     paddingHorizontal: 24,
+    gap: 16,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 8,
+    borderRadius: 16,
+    backgroundColor: 'transparent',
+  },
+  activeTab: {
+    backgroundColor: Colors.accentGold,
+  },
+  tabText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+  },
+  activeTabText: {
     color: Colors.black,
-    marginBottom: 16,
+    fontWeight: 'bold',
+  },
+  tabContent: {
+    flex: 1,
+  },
+  section: {
+    paddingTop: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 100,
   },
   menuItem: {
     flexDirection: 'row',
@@ -185,13 +298,63 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 40,
-    marginBottom: 100,
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#FFEAEA',
+    borderRadius: 16,
   },
   logoutText: {
     fontSize: 16,
     color: '#FF5252',
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingTop: 40,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.black,
+    marginTop: 16,
+  },
+  emptyStateSub: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  recipeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 12,
+  },
+  recipeImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+  },
+  recipeInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  recipeTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.black,
+    marginBottom: 4,
+  },
+  recipeMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  recipeTime: {
+    fontSize: 13,
+    color: Colors.textSecondary,
   },
 });
