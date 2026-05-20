@@ -85,3 +85,5 @@ const styles = StyleSheet.create({
   cardName: { fontWeight: 'bold', fontSize: 14, color: Colors.black },
   cardQty: { fontSize: 12, color: Colors.textSecondary },
 });
+
+export default PantryItemCard;

@@ -100,3 +100,5 @@ const styles = StyleSheet.create({
   followActionText: { fontSize: 14, fontWeight: 'bold', color: Colors.black },
   newDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF4D4F' },
 });
+
+export default FollowsModal;

@@ -116,3 +116,5 @@ const styles = StyleSheet.create({
   analyzeBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 30, paddingVertical: 15, borderRadius: 30, backgroundColor: Colors.black, elevation: 8 },
   analyzeBtnText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
 });
+
+export default CameraModal;

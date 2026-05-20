@@ -119,3 +119,5 @@ export async function mapDbRecipes(dbData: any[], supabaseClient: typeof supabas
     author_avatar: r.user_id ? profileMap[r.user_id]?.avatar_url : undefined,
   }));
 }
+
+export default null;

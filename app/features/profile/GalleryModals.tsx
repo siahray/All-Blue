@@ -98,3 +98,5 @@ const styles = StyleSheet.create({
   cancelBtn: { marginTop: 8, paddingVertical: 16, alignItems: 'center', backgroundColor: '#F5F5F5', borderRadius: 16 },
   cancelText: { fontSize: 16, fontWeight: 'bold', color: Colors.textSecondary },
 });
+
+export default ImagePickerModal;

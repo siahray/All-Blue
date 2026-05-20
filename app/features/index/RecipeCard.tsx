@@ -139,3 +139,5 @@ const styles = StyleSheet.create({
   cardTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 4 },
   cardSubtitle: { color: 'rgba(255,255,255,0.75)', fontSize: 13 },
 });
+
+export default RecipeCard;

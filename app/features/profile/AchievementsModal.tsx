@@ -90,3 +90,5 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', backgroundColor: Colors.accentGold || '#FFD700', borderRadius: 2 },
   achCount: { fontSize: 12, color: '#aaa', fontWeight: '600', marginLeft: 8 },
 });
+
+export default AchievementsModal;

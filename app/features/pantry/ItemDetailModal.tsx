@@ -115,3 +115,5 @@ const styles = StyleSheet.create({
   actionBtnText: { fontSize: 14, fontWeight: 'bold', color: Colors.black },
   deleteBtn: { backgroundColor: '#FFF5F5', borderColor: '#FFE0E0' },
 });
+
+export default ItemDetailModal;

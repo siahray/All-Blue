@@ -82,3 +82,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
+
+export default FeaturedActivity;

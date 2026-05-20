@@ -237,3 +237,5 @@ const styles = StyleSheet.create({
   submitBtn: { backgroundColor: Colors.black, height: 56, borderRadius: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   submitBtnText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
 });
+
+export default CameraScanner;

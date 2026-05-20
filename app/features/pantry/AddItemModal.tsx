@@ -99,3 +99,5 @@ const styles = StyleSheet.create({
   aiBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFDE7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: '#FFD700' },
   aiBadgeText: { fontSize: 10, fontWeight: 'bold', color: Colors.textSecondary, marginLeft: 4 },
 });
+
+export default AddItemModal;

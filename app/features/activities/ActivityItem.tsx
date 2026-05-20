@@ -86,3 +86,5 @@ const styles = StyleSheet.create({
   timeText: { fontSize: 12, color: '#999', fontWeight: '600', marginBottom: 4 },
   deleteButton: { padding: 4 },
 });
+
+export default ActivityItem;

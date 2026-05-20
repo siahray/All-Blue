@@ -38,3 +38,5 @@ const styles = StyleSheet.create({
   dropdownItem: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#EEE' },
   dropdownItemText: { fontSize: 16, textAlign: 'center', color: Colors.black },
 });
+
+export default UnitPickerModal;

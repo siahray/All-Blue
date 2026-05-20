@@ -71,3 +71,5 @@ const styles = StyleSheet.create({
   pillText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
   pillTextActive: { color: 'white', fontWeight: '700' },
 });
+
+export default WebSourceBar;

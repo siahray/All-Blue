@@ -53,3 +53,5 @@ const styles = StyleSheet.create({
   modalItemText: { fontSize: 16, color: Colors.black, fontWeight: '500' },
   logoutItem: { borderBottomWidth: 0, marginTop: 20 },
 });
+
+export default SettingsModal;

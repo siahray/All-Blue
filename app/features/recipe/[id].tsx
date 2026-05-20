@@ -610,6 +610,41 @@ export default function RecipeDetailScreen() {
           let finalTips = data.tips || [];
           let rawIngredients = data.ingredients || [];
 
+          // ── Clean Up Leaked Steps in Description ──
+          // If the description actually contains instructions (multiple paragraphs or numbered list) 
+          // or is identical to the first step, we parse them cleanly and separate them.
+          const isInstructionsInDesc = finalDesc.length > 180 && (finalDesc.includes('\n') || /^\d+[\.\)]/m.test(finalDesc));
+          const isSingleStepMatchingDesc = rawSteps.length === 1 && rawSteps[0] === finalDesc;
+
+          if (isInstructionsInDesc || isSingleStepMatchingDesc || rawSteps.length <= 1) {
+            try {
+              // Call analyzeRecipeStats to obtain a clean, high-quality summary and individual steps list!
+              const aiStats = await analyzeRecipeStats(data.title, finalDesc || rawSteps[0] || "");
+              if (aiStats && aiStats.description && aiStats.description.length > 10 && !aiStats.description.includes('1.')) {
+                finalDesc = aiStats.description;
+              } else {
+                finalDesc = `A delicious, chef-curated way to prepare classic ${data.title.toLowerCase()}.`;
+              }
+              
+              if (aiStats && aiStats.steps && aiStats.steps.length > 0) {
+                rawSteps = aiStats.steps;
+              }
+            } catch (e) {
+              console.warn("Failed to sanitize recipe steps with Gemini, using local parser:", e);
+              // Local Split Fallback
+              let parsedSteps: string[] = [];
+              if (finalDesc.includes('\r\n\r\n') || finalDesc.includes('\n\n')) {
+                parsedSteps = finalDesc.split(/\r?\n\r?\n/).map((s: string) => s.trim()).filter(Boolean);
+              } else if (finalDesc.includes('\r\n') || finalDesc.includes('\n')) {
+                parsedSteps = finalDesc.split(/\r?\n/).map((s: string) => s.trim()).filter(Boolean);
+              }
+              if (parsedSteps.length > 1) {
+                rawSteps = parsedSteps;
+              }
+              finalDesc = `A classic and flavorful ${data.title.toLowerCase()} recipe prepared to perfection.`;
+            }
+          }
+
           // Self-Healing: If ingredients or steps are missing, try to recover them
           if (rawIngredients.length === 0 || rawSteps.length === 0 || !finalDesc) {
             // Attempt to fetch from web if it's a known name or has web context
@@ -931,6 +966,21 @@ export default function RecipeDetailScreen() {
               </View>
             ))}
           </View>
+        </View>
+      )}
+
+      {recipe.steps && recipe.steps.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Instructions</Text>
+          <View style={styles.divider} />
+          {recipe.steps.map((step, index) => (
+            <View key={index} style={styles.stepRow}>
+              <View style={styles.stepNumberContainer}>
+                <Text style={styles.stepNumber}>{index + 1}</Text>
+              </View>
+              <Text style={styles.stepText}>{step}</Text>
+            </View>
+          ))}
         </View>
       )}
 

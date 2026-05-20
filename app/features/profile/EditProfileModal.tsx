@@ -77,3 +77,5 @@ const styles = StyleSheet.create({
   saveButton: { backgroundColor: Colors.accentGold, borderRadius: 16, padding: 18, alignItems: 'center', marginTop: 20 },
   saveButtonText: { color: Colors.black, fontSize: 16, fontWeight: 'bold' },
 });
+
+export default EditProfileModal;

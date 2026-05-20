@@ -61,3 +61,5 @@ const styles = StyleSheet.create({
   aboutFooterText: { fontSize: 14, color: Colors.black, fontWeight: '600' },
   aboutCopyright: { fontSize: 12, color: Colors.textSecondary, marginTop: 8 },
 });
+
+export default AboutModal;

@@ -118,3 +118,5 @@ const styles = StyleSheet.create({
   calendarCloseBtn: { flex: 1, height: 48, borderRadius: 14, backgroundColor: '#F5F5F5', justifyContent: 'center', alignItems: 'center' },
   calendarCloseText: { color: Colors.textSecondary, fontWeight: 'bold', fontSize: 14 },
 });
+
+export default CalendarModal;
