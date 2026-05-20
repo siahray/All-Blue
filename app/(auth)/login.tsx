@@ -6,35 +6,43 @@ import {
   TouchableOpacity,
   Dimensions,
   Image,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import { useAppAlert } from '../../components/common/AppAlert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { Colors } from '../../theme/colors';
 import { supabase } from '../../services/supabase';
-import { ChefHat, ChevronRight, Globe, Info } from 'lucide-react-native';
+import { ChefHat, ChevronRight } from 'lucide-react-native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { FontAwesome } from '@expo/vector-icons';
 
 // Handle redirect back to app
 WebBrowser.maybeCompleteAuthSession();
 
+// Configure Google Sign-In
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '1234567890-example.apps.googleusercontent.com',
+});
+
 const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen() {
+  const { showAlert } = useAppAlert();
   const [loading, setLoading] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+    if (isProcessing) return;
     try {
+      setIsProcessing(true);
       setLoading(provider);
 
-      // Hardcode the deep link so Expo Dev Tools don't inject "exp+" into it
       const redirectUrl = 'allblue://auth';
       
-      console.log('--- LOGIN ATTEMPT ---');
-      console.log('Provider:', provider);
-      console.log('Redirecting to:', redirectUrl);
+      console.log('[Login] Opening OAuth for provider:', provider);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
@@ -47,14 +55,17 @@ export default function LoginScreen() {
       if (error) throw error;
 
       if (data?.url) {
-        // We open the browser and let the root _layout.tsx catch the return trip
+        // Open the browser — when the user completes OAuth, the OS will fire
+        // the deep link back to the app, and _layout.tsx handleDeepLink takes over.
         await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+        // No manual session handling here — _layout.tsx owns that entirely.
       }
       
     } catch (error: any) {
-      Alert.alert('Login Error', error.message);
+      showAlert('Login Error', error.message);
     } finally {
       setLoading(null);
+      setIsProcessing(false);
     }
   };
 
@@ -65,9 +76,12 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <ChefHat size={48} color={Colors.black} strokeWidth={2.5} />
+            <Image 
+              source={require('../../assets/icon.png')} 
+              style={styles.logoImage} 
+            />
           </View>
-          <Text style={styles.appName}>AllBlue</Text>
+          <Text style={styles.appName}>All Blue</Text>
           <Text style={styles.tagline}>The ultimate culinary discovery</Text>
         </View>
 
@@ -93,7 +107,10 @@ export default function LoginScreen() {
               <ActivityIndicator color="black" />
             ) : (
               <>
-                <Globe size={20} color="black" />
+                <Image 
+                  source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/48px-Google_%22G%22_logo.svg.png' }} 
+                  style={{ width: 20, height: 20, resizeMode: 'contain' }} 
+                />
                 <Text style={styles.socialButtonText}>Continue with Google</Text>
               </>
             )}
@@ -108,7 +125,7 @@ export default function LoginScreen() {
               <ActivityIndicator color="white" />
             ) : (
               <>
-                <Info size={20} color="white" />
+                <FontAwesome name="facebook" size={20} color="white" />
                 <Text style={[styles.socialButtonText, { color: 'white' }]}>Continue with Facebook</Text>
               </>
             )}
@@ -116,7 +133,7 @@ export default function LoginScreen() {
 
           <TouchableOpacity 
             style={styles.guestButton}
-            onPress={() => Alert.alert('Guest Mode', 'You can browse recipes as a guest, but features like saving and AI generation will be limited.')}
+            onPress={() => showAlert('Guest Mode', 'You can browse recipes as a guest, but features like saving and AI generation will be limited.')}
           >
             <Text style={styles.guestButtonText}>Continue as Guest</Text>
             <ChevronRight size={16} color={Colors.textSecondary} />
@@ -160,6 +177,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     marginBottom: 16,
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   appName: {
     fontSize: 32,

@@ -11,19 +11,24 @@ export const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarPro
   // Separate left tabs, center (cook), right tabs
   const leftRoutes = state.routes.filter(r => r.name === 'index' || r.name === 'pantry');
   const centerRoute = state.routes.find(r => r.name === 'cook');
-  const rightRoutes = state.routes.filter(r => r.name === 'activities' || r.name === 'profile');
+  const rightRoutes = state.routes.filter(r => 
+    r.name.toLowerCase().includes('activities') || 
+    r.name.toLowerCase().includes('likes') || 
+    r.name === 'profile'
+  );
 
   const getIcon = (name: string, isFocused: boolean) => {
     const color = isFocused ? Colors.black : '#B0B0B0';
     const size = 26;
     const sw = 1.8;
-    switch (name) {
-      case 'index': return <Home size={size} color={color} strokeWidth={sw} />;
-      case 'pantry': return <Archive size={size} color={color} strokeWidth={sw} />;
-      case 'activities': return <History size={size} color={color} strokeWidth={sw} />;
-      case 'profile': return <User size={size} color={color} strokeWidth={sw} />;
-      default: return null;
-    }
+    const n = name.toLowerCase();
+
+    if (n.includes('index')) return <Home size={size} color={color} strokeWidth={sw} />;
+    if (n.includes('pantry')) return <Archive size={size} color={color} strokeWidth={sw} />;
+    if (n.includes('activities') || n.includes('likes')) return <History size={size} color={color} strokeWidth={sw} />;
+    if (n.includes('profile')) return <User size={size} color={color} strokeWidth={sw} />;
+    
+    return null;
   };
 
   const handlePress = (route: any) => {

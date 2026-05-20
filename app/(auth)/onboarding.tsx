@@ -7,11 +7,12 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   Animated,
   Dimensions,
+  Image,
 } from 'react-native';
+import { useAppAlert } from '../../components/common/AppAlert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
@@ -22,6 +23,7 @@ import { ArrowRight, User, ChefHat, Sparkles, BookOpen } from 'lucide-react-nati
 const { width } = Dimensions.get('window');
 
 export default function OnboardingScreen() {
+  const { showAlert } = useAppAlert();
   const [step, setStep] = useState(1);
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,19 +35,20 @@ export default function OnboardingScreen() {
 
   const handleSaveUsername = async () => {
     if (username.trim().length < 3) {
-      Alert.alert('Invalid Username', 'Username must be at least 3 characters long.');
+      showAlert('Invalid Username', 'Username must be at least 3 characters long.');
       return;
     }
 
     const validUsernameRegex = /^[a-zA-Z0-9_]+$/;
     if (!validUsernameRegex.test(username.trim())) {
-      Alert.alert('Invalid Username', 'Username can only contain letters, numbers, and underscores.');
+      showAlert('Invalid Username', 'Username can only contain letters, numbers, and underscores.');
       return;
     }
 
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) throw new Error('No user found');
 
       const finalUsername = username.trim().toLowerCase();
@@ -57,7 +60,7 @@ export default function OnboardingScreen() {
         .single();
 
       if (existingUser && existingUser.id !== user.id) {
-        Alert.alert('Username Taken', 'This username is already in use. Please pick another one.');
+        showAlert('Username Taken', 'This username is already in use. Please pick another one.');
         setLoading(false);
         return;
       }
@@ -78,7 +81,7 @@ export default function OnboardingScreen() {
 
       router.replace('/(tabs)');
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Something went wrong saving your username.');
+      showAlert('Error', error.message || 'Something went wrong saving your username.');
     } finally {
       setLoading(false);
     }
@@ -88,9 +91,12 @@ export default function OnboardingScreen() {
     <View style={styles.stepContainer}>
       <View style={styles.header}>
         <View style={styles.iconContainer}>
-          <ChefHat size={44} color={Colors.black} strokeWidth={2.5} />
+          <Image 
+            source={require('../../assets/icon.png')} 
+            style={styles.logoImage} 
+          />
         </View>
-        <Text style={styles.title}>Welcome to AllBlue</Text>
+        <Text style={styles.title}>Welcome to All Blue</Text>
         <Text style={styles.subtitle}>Your personal culinary universe. Discover, cook, and share amazing recipes.</Text>
       </View>
 
@@ -213,6 +219,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   title: {
     fontSize: 32,

@@ -70,6 +70,34 @@ export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
   },
 });
 
+// Memory cache for active session to completely avoid AsyncStorage thread locks on Android resumption
+export let cachedSession: any = null;
+
+// Initialize and keep updated
+supabase.auth.getSession().then(({ data: { session } }) => {
+  cachedSession = session;
+});
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedSession = session;
+});
+
+// A robust Promise racing utility to guarantee database queries never hang indefinitely on Android
+export async function withTimeout<T>(promise: PromiseLike<T> | Promise<T>, timeoutMs = 15000): Promise<T> {
+  let timeoutId: any;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error('Network request timed out. Please pull to refresh or reload the app.'));
+    }, timeoutMs);
+  });
+  
+  try {
+    return await Promise.race([Promise.resolve(promise), timeoutPromise]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 // --- TypeScript Types for your App ---
 
 export type Profile = {
@@ -79,6 +107,8 @@ export type Profile = {
   chef_title: string;
   recipes_cooked: number;
   updated_at: string;
+  is_private?: boolean;
+  hide_likes?: boolean;
 };
 
 export type InventoryItem = {

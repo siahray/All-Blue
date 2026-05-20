@@ -15,7 +15,11 @@ export type Recipe = {
   category: string;
   ingredients: string[];
   steps: string[];
+  equipment: string[];
   author_id?: string;
+  author_name?: string;
+  author_avatar?: string;
+  tips?: string[];
 };
 
 // No hardcoded recipes here anymore!
