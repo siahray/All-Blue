@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   StyleSheet, Text, View, Modal, TouchableOpacity, ScrollView,
-  ActivityIndicator, Switch, Platform,
+  ActivityIndicator, Switch, Platform, Image,
 } from 'react-native';
 import { Colors } from '../../../theme/colors';
 import { X } from 'lucide-react-native';
@@ -42,7 +42,10 @@ export const PrivacyModal = ({
               <View style={styles.linkedAccountRow}>
                 <View style={styles.linkedAccountLeft}>
                   <View style={[styles.oauthIconBadge, { backgroundColor: '#F5F5F5' }]}>
-                    <FontAwesome name="google" size={22} color={isGoogleLinked ? '#4285F4' : '#888'} />
+                    <Image 
+                      source={require('../../../assets/google-logo.png')} 
+                      style={{ width: 22, height: 22, resizeMode: 'contain', opacity: isGoogleLinked ? 1 : 0.4 }} 
+                    />
                   </View>
                   <View>
                     <Text style={styles.linkedAccountName}>Google</Text>

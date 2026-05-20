@@ -108,7 +108,7 @@ export default function LoginScreen() {
             ) : (
               <>
                 <Image 
-                  source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/48px-Google_%22G%22_logo.svg.png' }} 
+                  source={require('../../assets/google-logo.png')} 
                   style={{ width: 20, height: 20, resizeMode: 'contain' }} 
                 />
                 <Text style={styles.socialButtonText}>Continue with Google</Text>
