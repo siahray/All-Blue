@@ -18,6 +18,7 @@ import { supabase } from '../../services/supabase';
 import { ChefHat, ChevronRight } from 'lucide-react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { FontAwesome } from '@expo/vector-icons';
+import { LegalModal } from '../../components/common/LegalModal';
 
 // Handle redirect back to app
 WebBrowser.maybeCompleteAuthSession();
@@ -33,6 +34,13 @@ export default function LoginScreen() {
   const { showAlert } = useAppAlert();
   const [loading, setLoading] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [legalVisible, setLegalVisible] = useState(false);
+  const [legalTab, setLegalTab] = useState<'terms' | 'privacy'>('terms');
+
+  const handleOpenLegal = (tab: 'terms' | 'privacy') => {
+    setLegalTab(tab);
+    setLegalVisible(true);
+  };
 
   const handleSocialLogin = async (provider: 'google' | 'facebook') => {
     if (isProcessing) return;
@@ -136,9 +144,23 @@ export default function LoginScreen() {
 
       <View style={styles.legal}>
         <Text style={styles.legalText}>
-          By continuing, you agree to our Terms of Service and Privacy Policy.
+          By continuing, you agree to our{' '}
+          <Text style={styles.legalLink} onPress={() => handleOpenLegal('terms')}>
+            Terms of Service
+          </Text>{' '}
+          and{' '}
+          <Text style={styles.legalLink} onPress={() => handleOpenLegal('privacy')}>
+            Privacy Policy
+          </Text>
+          .
         </Text>
       </View>
+
+      <LegalModal 
+        visible={legalVisible} 
+        onClose={() => setLegalVisible(false)} 
+        initialTab={legalTab} 
+      />
     </SafeAreaView>
   );
 }
@@ -267,5 +289,10 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  legalLink: {
+    textDecorationLine: 'underline',
+    fontWeight: 'bold',
+    color: Colors.black,
   },
 });
