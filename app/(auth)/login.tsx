@@ -131,13 +131,6 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.guestButton}
-            onPress={() => showAlert('Guest Mode', 'You can browse recipes as a guest, but features like saving and AI generation will be limited.')}
-          >
-            <Text style={styles.guestButtonText}>Continue as Guest</Text>
-            <ChevronRight size={16} color={Colors.textSecondary} />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -263,19 +256,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 12,
     color: Colors.black,
-  },
-  guestButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-    paddingVertical: 12,
-  },
-  guestButtonText: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    fontWeight: '600',
-    marginRight: 8,
   },
   legal: {
     paddingHorizontal: 40,
