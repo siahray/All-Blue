@@ -183,6 +183,28 @@ export default function RootLayout() {
 
     const inAuthGroup = segments[0] === '(auth)';
 
+    const checkUsernameDirect = async () => {
+      if (!session?.user?.id) return;
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', session.user.id)
+          .single();
+        if (data?.username) {
+          setHasUsername(true);
+        } else {
+          if ((segments as string[])[1] !== 'onboarding') {
+            router.replace('/(auth)/onboarding');
+          }
+        }
+      } catch {
+        if ((segments as string[])[1] !== 'onboarding') {
+          router.replace('/(auth)/onboarding');
+        }
+      }
+    };
+
     if (!session) {
       // Not logged in — go to login
       if ((segments as string[])[1] !== 'login') {
@@ -192,10 +214,8 @@ export default function RootLayout() {
       // Profile check still in flight — wait
       return;
     } else if (!hasUsername) {
-      // Logged in, no username yet — go to onboarding
-      if ((segments as string[])[1] !== 'onboarding') {
-        router.replace('/(auth)/onboarding');
-      }
+      // Logged in, no username yet — double-check DB to prevent onboarding loop
+      checkUsernameDirect();
     } else if (inAuthGroup) {
       // Fully authenticated — go to main app
       router.replace('/(tabs)');

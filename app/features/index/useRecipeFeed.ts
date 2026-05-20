@@ -1,3 +1,4 @@
+import React from 'react';
 import { Recipe } from '../../../data/recipes';
 import { supabase } from '../../../services/supabase';
 import { WebSourceType, WEB_SOURCES } from './WebSourceBar';
@@ -120,4 +121,6 @@ export async function mapDbRecipes(dbData: any[], supabaseClient: typeof supabas
   }));
 }
 
-export default null;
+export default function IgnoredRoute() {
+  return null;
+}
