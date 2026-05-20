@@ -134,6 +134,32 @@ export default function ProfileScreen() {
     finally { setLinkingProvider(null); }
   };
 
+  const handleDeleteAccount = async () => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) return;
+
+      // Clean up user database records
+      await supabase.from('inventory').delete().eq('user_id', user.id);
+      await supabase.from('activities').delete().eq('user_id', user.id);
+      await supabase.from('follows').delete().eq('follower_id', user.id);
+      await supabase.from('follows').delete().eq('following_id', user.id);
+      await supabase.from('recipes').delete().eq('author_id', user.id);
+      await supabase.from('likes').delete().eq('user_id', user.id);
+      await supabase.from('profiles').delete().eq('id', user.id);
+
+      // Sign user out of Auth
+      await supabase.auth.signOut();
+      showAlert('Account Deleted', 'Your All Blue account and all related data have been completely erased.');
+    } catch (e: any) {
+      showAlert('Delete Error', e.message || 'Failed to delete account. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const uploadAvatar = async (uri: string, userId: string): Promise<string | null> => {
     try {
       const ext = uri.split('.').pop() || 'jpg';
@@ -281,7 +307,7 @@ export default function ProfileScreen() {
         onLogout={async () => { setIsSettingsVisible(false); await supabase.auth.signOut(); }}
       />
       <EditProfileModal visible={isEditProfileVisible} onClose={() => setIsEditProfileVisible(false)} editData={editData} setEditData={setEditData} selectedAvatarUri={selectedAvatarUri} oauthAvatarUrl={oauthAvatarUrl} loading={loading} onSave={handleUpdateProfile} onChangePhoto={() => setIsImagePickerVisible(true)} />
-      <PrivacyModal visible={isPrivacyVisible} onClose={() => setIsPrivacyVisible(false)} identities={identities} linkingProvider={linkingProvider} isPrivate={isPrivateState} hideLikes={hideLikesState} onTogglePrivate={async (v) => { setIsPrivateState(v); const { data: { session } } = await supabase.auth.getSession(); if (session?.user) await supabase.from('profiles').update({ is_private: v }).eq('id', session.user.id); }} onToggleHideLikes={async (v) => { setHideLikesState(v); const { data: { session } } = await supabase.auth.getSession(); if (session?.user) await supabase.from('profiles').update({ hide_likes: v }).eq('id', session.user.id); }} onLinkIdentity={handleLinkIdentity} />
+      <PrivacyModal visible={isPrivacyVisible} onClose={() => setIsPrivacyVisible(false)} identities={identities} linkingProvider={linkingProvider} isPrivate={isPrivateState} hideLikes={hideLikesState} onTogglePrivate={async (v) => { setIsPrivateState(v); const { data: { session } } = await supabase.auth.getSession(); if (session?.user) await supabase.from('profiles').update({ is_private: v }).eq('id', session.user.id); }} onToggleHideLikes={async (v) => { setHideLikesState(v); const { data: { session } } = await supabase.auth.getSession(); if (session?.user) await supabase.from('profiles').update({ hide_likes: v }).eq('id', session.user.id); }} onLinkIdentity={handleLinkIdentity} onDeleteAccount={handleDeleteAccount} />
       <AboutModal visible={isAboutVisible} onClose={() => setIsAboutVisible(false)} />
       <AchievementsModal visible={isAchievementsVisible} onClose={() => setIsAchievementsVisible(false)} stats={stats} likedRecipesCount={likedRecipes.length} />
       <FollowsModal visible={isFollowsModalVisible} onClose={() => setIsFollowsModalVisible(false)} type={followModalType} followList={followList} loading={loadingFollows} newFollowerIds={newFollowerIds} onClearFollowerId={(id) => setNewFollowerIds(p => p.filter(x => x !== id))} userId={profile?.id} />

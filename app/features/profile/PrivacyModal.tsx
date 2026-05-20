@@ -6,6 +6,7 @@ import {
 import { Colors } from '../../../theme/colors';
 import { X } from 'lucide-react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import { useAppAlert } from '../../../components/common/AppAlert';
 
 interface PrivacyModalProps {
   visible: boolean;
@@ -17,14 +18,34 @@ interface PrivacyModalProps {
   onTogglePrivate: (v: boolean) => void;
   onToggleHideLikes: (v: boolean) => void;
   onLinkIdentity: (provider: 'google' | 'facebook') => void;
+  onDeleteAccount: () => void;
 }
 
 export const PrivacyModal = ({
   visible, onClose, identities, linkingProvider,
-  isPrivate, hideLikes, onTogglePrivate, onToggleHideLikes, onLinkIdentity,
+  isPrivate, hideLikes, onTogglePrivate, onToggleHideLikes, onLinkIdentity, onDeleteAccount,
 }: PrivacyModalProps) => {
+  const { showAlert } = useAppAlert();
   const isGoogleLinked = identities.some(i => i.provider === 'google');
   const isFacebookLinked = identities.some(i => i.provider === 'facebook');
+
+  const handleDeletePressed = () => {
+    showAlert(
+      'Delete Account',
+      'Are you absolutely sure you want to permanently delete your account? This will erase all your recipes, pantry history, and settings. This action is irreversible.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            onClose();
+            onDeleteAccount();
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -94,6 +115,17 @@ export const PrivacyModal = ({
               </View>
               <Switch value={hideLikes} onValueChange={onToggleHideLikes} trackColor={{ false: '#D1D1D6', true: Colors.black }} thumbColor={Platform.OS === 'android' ? 'white' : undefined} />
             </View>
+
+            {/* Danger Zone */}
+            <View style={styles.dangerZoneContainer}>
+              <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
+              <Text style={styles.dangerZoneDesc}>
+                Permanently delete your account and all associated data. This action cannot be undone.
+              </Text>
+              <TouchableOpacity style={styles.deleteBtn} onPress={handleDeletePressed} activeOpacity={0.8}>
+                <Text style={styles.deleteBtnText}>Delete Account</Text>
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         </View>
       </View>
@@ -122,4 +154,42 @@ const styles = StyleSheet.create({
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 24, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#F0F0F0' },
   toggleLeft: { flex: 1, paddingRight: 16 },
   toggleDesc: { fontSize: 13, color: Colors.textSecondary, lineHeight: 18, marginTop: 4 },
+  dangerZoneContainer: {
+    marginTop: 32,
+    padding: 20,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FFE0E0',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  dangerZoneTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FF4D4F',
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
+  dangerZoneDesc: {
+    fontSize: 13,
+    color: '#7F8C8D',
+    lineHeight: 18,
+    marginBottom: 16,
+    textAlign: 'left',
+    width: '100%',
+  },
+  deleteBtn: {
+    backgroundColor: '#FF4D4F',
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  deleteBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
 });
